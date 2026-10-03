@@ -1,0 +1,50 @@
+{
+  "regions": {
+    "North America": ["Aether", "Crystal", "Dynamis", "Primal"],
+    "Europe": ["Chaos", "Light"],
+    "Japan": ["Elemental", "Gaia", "Mana", "Meteor"],
+    "Oceania": ["Materia"]
+  },
+  "dcWorlds": {
+    "Aether": ["Adamantoise", "Cactuar", "Faerie", "Gilgamesh", "Jenova", "Midgardsormr", "Sargatanas", "Siren"],
+    "Chaos": ["Cerberus", "Louisoix", "Moogle", "Omega", "Phantom", "Ragnarok", "Sagittarius", "Spriggan"],
+    "Crystal": ["Balmung", "Brynhildr", "Coeurl", "Diabolos", "Goblin", "Malboro", "Mateus", "Zalera"],
+    "Dynamis": ["Cuchulainn", "Golem", "Halicarnassus", "Kraken", "Maduin", "Marilith", "Rafflesia", "Seraph"],
+    "Elemental": ["Aegis", "Atomos", "Carbuncle", "Garuda", "Gungnir", "Kujata", "Tonberry", "Typhon"],
+    "Gaia": ["Alexander", "Bahamut", "Durandal", "Fenrir", "Ifrit", "Ridill", "Tiamat", "Ultima"],
+    "Light": ["Alpha", "Lich", "Odin", "Phoenix", "Raiden", "Shiva", "Twintania", "Zodiark"],
+    "Mana": ["Anima", "Asura", "Chocobo", "Hades", "Ixion", "Masamune", "Pandaemonium", "Titan"],
+    "Materia": ["Bismarck", "Ravana", "Sephirot", "Sophia", "Zurvan"],
+    "Meteor": ["Belias", "Mandragora", "Ramuh", "Shinryu", "Unicorn", "Valefor", "Yojimbo", "Zeromus"],
+    "Primal": ["Behemoth", "Excalibur", "Exodus", "Famfrit", "Hyperion", "Lamia", "Leviathan", "Ultros"]
+  },
+  "categories": [
+    ["DutyRoulette", "Duty Roulette"],
+    ["Dungeon", "Dungeons"],
+    ["Guildhest", "Guildhests"],
+    ["Trial", "Trials"],
+    ["Raid", "Raids"],
+    ["HighEndDuty", "High-end Duty"],
+    ["PvP", "PvP"],
+    ["GoldSaucer", "Gold Saucer"],
+    ["Fate", "FATEs"],
+    ["TreasureHunt", "Treasure Hunt"],
+    ["TheHunt", "The Hunt"],
+    ["GatheringForay", "Gathering Forays"],
+    ["DeepDungeon", "Deep Dungeons"],
+    ["FieldOperation", "Field Operations"],
+    ["VariantAndCriterionDungeon", "V&C Dungeon Finder"],
+    ["None", "None"]
+  ],
+  "tanks": ["GLA", "MRD", "PLD", "WAR", "DRK", "GNB"],
+  "healers": ["CNJ", "WHM", "SCH", "AST", "SGE"],
+  "nonCombat": ["CRP", "BSM", "ARM", "GSM", "LTW", "WVR", "ALC", "CUL", "MIN", "BTN", "FSH"],
+  "deepDungeons": {
+    "amdapor keep (hard)": "The Palace of the Dead",
+    "wanderer's palace (hard)": "Heaven-on-High",
+    "great gubal library": "Eureka Orthos",
+    "keeper of the lake": "Pilgrim's Traverse",
+    "neverreap": "The Final Verse (Quantum)",
+    "vault": "The Final Verse"
+  }
+}

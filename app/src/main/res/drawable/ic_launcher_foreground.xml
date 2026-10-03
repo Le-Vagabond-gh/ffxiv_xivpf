@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The art fills 70% of the 108dp canvas so its inner gold ring lands on the launcher's
+     visible circle (66%); the square edges of the image are always outside the mask. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@mipmap/ic_art"
+    android:inset="15%" />
