@@ -126,6 +126,7 @@
     const state = {
         area: 'Europe',                                   // 'All' | region name | DC name
         categories: CATEGORIES.map(([key]) => key),      // allowed category keys
+        duties: [],                                       // dutyName()s to show, empty = all
         search: '',
         autoRefresh: true,
         interval: 60,                                     // seconds, page refresh and poller alike
@@ -137,6 +138,7 @@
             if (saved && typeof saved === 'object') {
                 if (typeof saved.area === 'string') state.area = saved.area;
                 if (Array.isArray(saved.categories)) state.categories = saved.categories;
+                if (Array.isArray(saved.duties)) state.duties = saved.duties;
                 if (typeof saved.search === 'string') state.search = saved.search;
                 if (typeof saved.autoRefresh === 'boolean') state.autoRefresh = saved.autoRefresh;
                 if (typeof saved.interval === 'number') state.interval = saved.interval;
@@ -206,14 +208,12 @@
         alertsBox = el('input', { type: 'checkbox', onchange: () => Android.setPolling(alertsBox.checked) });
         alertsBox.checked = Android.polling();
 
-        const categories = el('div', { id: 'pf-categories' });
+        const categories = el('div', { id: 'pf-categories', class: 'pf-checks' });
         for (const [key, label] of CATEGORIES) {
-            const box = el('input', { type: 'checkbox', value: key, onchange: () => {
+            categories.append(checkbox(key, label, state.categories.includes(key), () => {
                 state.categories = [...categories.querySelectorAll('input:checked')].map(i => i.value);
                 saveState(); render();
-            } });
-            box.checked = state.categories.includes(key);
-            categories.append(el('label', {}, box, document.createTextNode(label)));
+            }));
         }
         const setAll = on => {
             categories.querySelectorAll('input').forEach(i => { i.checked = on; });
@@ -248,12 +248,28 @@
                                     ),
                                 ),
                             ),
+                            // Filled by populateDuties() from the current listings
+                            el('details', { class: 'filter-controls' },
+                                el('summary', { id: 'pf-duties-summary', text: 'duties' }),
+                                el('div', {},
+                                    el('div', { id: 'pf-duties', class: 'control' }),
+                                    el('div', { class: 'pf-cat-buttons' },
+                                        el('a', { text: 'clear', onclick: () => { state.duties = []; saveState(); render(); } }),
+                                    ),
+                                ),
+                            ),
                         ),
                     ),
                     el('div', { id: 'listings', class: 'list' }),
                 ),
             ),
         );
+    }
+
+    function checkbox(value, label, checked, onchange) {
+        const box = el('input', { type: 'checkbox', value, onchange });
+        box.checked = checked;
+        return el('label', {}, box, document.createTextNode(label));
     }
 
     // ---------------------------------------------------------------
@@ -339,12 +355,17 @@
         );
     }
 
+    function matchesAreaAndCategory(l) {
+        const dcs = allowedDataCentres();
+        if (dcs && !dcs.has(dataCentre(l))) return false;
+        return state.categories.includes(l.category);
+    }
+
     // Must stay in step with Listings.Filter.matches() on the Kotlin side.
     function matches(container) {
         const l = container.listing;
-        const dcs = allowedDataCentres();
-        if (dcs && !dcs.has(dataCentre(l))) return false;
-        if (!state.categories.includes(l.category)) return false;
+        if (!matchesAreaAndCategory(l)) return false;
+        if (state.duties.length && !state.duties.includes(dutyName(l))) return false;
         if (state.search) {
             const needle = state.search.toLowerCase();
             const haystack = [dutyName(l), l.description.en, l.recruiter, l.created_world.name, l.home_world.name]
@@ -359,9 +380,48 @@
         if (status) status.textContent = text;
     }
 
+    let dutyPanelKey = null;
+
+    // Duties panel: duties with listings in the selected area/categories,
+    // grouped by category. Checked duties nobody is currently recruiting for
+    // stay in a "not listed" group so they can still be unchecked.
+    function populateDuties() {
+        const panel = document.getElementById('pf-duties');
+        if (!panel) return;
+        const byCategory = new Map(CATEGORIES.map(([key]) => [key, new Set()]));
+        for (const c of containers) {
+            const l = c.listing;
+            if (matchesAreaAndCategory(l)) byCategory.get(l.category)?.add(dutyName(l));
+        }
+        const groups = [...byCategory].filter(([, set]) => set.size)
+            .map(([key, set]) => [CATEGORY_LABEL[key], [...set].sort()]);
+        const listed = new Set(groups.flatMap(([, duties]) => duties));
+        const unlisted = state.duties.filter(d => !listed.has(d));
+        if (unlisted.length) groups.push(['Not listed', unlisted.sort()]);
+
+        document.getElementById('pf-duties-summary').textContent =
+            state.duties.length ? `duties (${state.duties.length})` : 'duties';
+
+        // Skip the rebuild when nothing changed, so focus isn't lost on every keystroke/refresh
+        const key = JSON.stringify([state.duties, groups]);
+        if (key === dutyPanelKey) return;
+        dutyPanelKey = key;
+
+        const onchange = () => {
+            state.duties = [...panel.querySelectorAll('input:checked')].map(i => i.value);
+            saveState(); render();
+        };
+        panel.replaceChildren(...groups.map(([label, duties]) => el('div', {},
+            el('strong', { text: label }),
+            el('div', { class: 'pf-checks' }, ...duties.map(d => checkbox(d, d, state.duties.includes(d), onchange))),
+        )));
+        if (!groups.length) panel.append(el('em', { text: 'No duties listed.' }));
+    }
+
     function render() {
         const listings = document.getElementById('listings');
         if (!listings) return;
+        populateDuties();
         const shown = containers.filter(matches);
         listings.replaceChildren(...shown.map(renderRow));
         if (shown.length === 0) {

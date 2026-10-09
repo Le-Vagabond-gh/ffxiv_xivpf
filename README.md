@@ -11,6 +11,7 @@ A phone version of the xivpf party finder page, with notifications for new listi
 The page shows the current party finder listings from xivpf.com, filtered by:
 - region or data centre
 - categories (collapsible list, with all / none shortcuts)
+- specific duties (collapsible list of the duties currently listed, grouped by category; nothing checked shows all)
 - free text search over duty, description, recruiter and worlds
 
 Filters are remembered between launches.

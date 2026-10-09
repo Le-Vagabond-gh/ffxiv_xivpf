@@ -37,6 +37,7 @@ object Listings {
         private val categoryLabel = HashMap<String, String>()
         private val dcs: Set<String>?
         private val categories: Set<String>
+        private val duties: Set<String> = state.optJSONArray("duties")?.let { a -> (0 until a.length()).map { a.getString(it) }.toSet() } ?: emptySet()
         private val search: String = state.optString("search", "").lowercase()
         val interval: Long = state.optInt("interval", 60).coerceAtLeast(60).toLong()
 
@@ -81,6 +82,7 @@ object Listings {
         fun matches(l: JSONObject): Boolean {
             if (dcs != null && dataCentre(l) !in dcs) return false
             if (l.optString("category") !in categories) return false
+            if (duties.isNotEmpty() && dutyName(l) !in duties) return false
             if (search.isNotEmpty()) {
                 val haystack = listOf(
                     dutyName(l), l.getJSONObject("description").optString("en"), l.optString("recruiter"),
