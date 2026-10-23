@@ -12,6 +12,7 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import org.json.JSONObject
 import java.io.File
 
@@ -41,15 +42,18 @@ class MainActivity : Activity() {
         }
         web.addJavascriptInterface(Bridge(), "Android")
         // edge-to-edge is forced since android 15, so the page would start under the
-        // status bar; the padding strip takes pico's dark background
-        web.setBackgroundColor(0xFF11191F.toInt())
-        web.setOnApplyWindowInsetsListener { v, insets ->
+        // status bar. the inset padding goes on a wrapper: WebView drops its own padding.
+        // the strip takes pico's dark background
+        val frame = FrameLayout(this)
+        frame.setBackgroundColor(0xFF11191F.toInt())
+        frame.setOnApplyWindowInsetsListener { v, insets ->
             @Suppress("DEPRECATION")
             v.setPadding(0, insets.systemWindowInsetTop, 0, insets.systemWindowInsetBottom)
             insets
         }
+        frame.addView(web)
         web.loadUrl("file:///android_asset/pf.html")
-        setContentView(web)
+        setContentView(frame)
     }
 
     // All methods run on the WebView's bridge thread, not the UI thread.
