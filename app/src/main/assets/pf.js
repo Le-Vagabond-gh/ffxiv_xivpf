@@ -33,6 +33,9 @@
         onRender: () => { if (alertsBox) alertsBox.checked = Android.polling(); },
     });
 
+    // the status bar inset already separates the page from the top of the screen
+    document.head.append(ctx.el('style', { text: '.js body { padding-top: .5em; }' }));
+
     // Refresh when coming back to the app
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') ctx.refresh();
