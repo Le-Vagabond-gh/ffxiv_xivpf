@@ -186,7 +186,6 @@ window.xivpfInit = function (platform) {
     const ctx = { el, state, saveState, render, refresh, scheduleRefresh };
 
     function buildPage() {
-        document.documentElement.innerHTML = '';
         document.documentElement.lang = 'en';
         document.documentElement.className = 'js';
         document.documentElement.dataset.theme = 'dark';
@@ -213,7 +212,13 @@ window.xivpfInit = function (platform) {
                 #container > .settings > .controls { flex-wrap: wrap; row-gap: .5em; }
                 #pf-auto { justify-content: flex-start; gap: 1em; margin-bottom: .5em; }
                 #pf-auto > label { margin: 0; }
-                footer { color: var(--meta-text); text-align: center; padding: 1em 0 2em; }
+                /* footer sits at the bottom of the screen when the list is short, and wraps only at its comma
+                   (common.css already makes .js body a flex column with a 1em top margin, which becomes padding so 100vh fits) */
+                .js body { min-height: 100vh; box-sizing: border-box; margin-top: 0; padding-top: 1em; }
+                /* the inlined icon sprite must not take space as a flex item (display: none would break <use>) */
+                body > svg { position: absolute; width: 0; height: 0; overflow: hidden; }
+                footer { margin-top: auto; color: var(--meta-text); text-align: center; padding: 1em 0 2em; }
+                footer span { display: inline-block; white-space: nowrap; }
                 #container > .settings > .controls > select { flex: 0 1 14em; }
                 #container > .settings > .controls > label { display: inline-flex; align-items: center; gap: .4em; margin: 0 0 0 1em; white-space: nowrap; }
                 #container > .settings > .controls > label > input { margin: 0; }
@@ -325,15 +330,20 @@ window.xivpfInit = function (platform) {
             // same links as the site's "support" menu: this page only exists thanks to their api
             el('footer', { class: 'container' },
                 el('small', {},
-                    document.createTextNode('data from xivpf.com, support its '),
-                    el('a', { href: 'https://ko-fi.com/zeroeightsix', target: '_blank', rel: 'noopener', text: 'current maintainer' }),
-                    document.createTextNode(' or '),
-                    el('a', { href: 'https://www.patreon.com/join/lojewalo', target: '_blank', rel: 'noopener', text: 'original creator' }),
+                    el('span', { text: 'data from xivpf.com, ' }),
+                    el('span', {},
+                        document.createTextNode('support its '),
+                        el('a', { href: 'https://ko-fi.com/zeroeightsix', target: '_blank', rel: 'noopener', text: 'current maintainer' }),
+                        document.createTextNode(' or '),
+                        el('a', { href: 'https://www.patreon.com/join/lojewalo', target: '_blank', rel: 'noopener', text: 'original creator' }),
+                    ),
                 ),
             ),
         );
 
-        document.documentElement.append(head, body);
+        // not innerHTML = '' then append: an empty innerHTML on <html> makes the parser
+        // add an implicit empty head and body, and the page ends up with two bodies
+        document.documentElement.replaceChildren(head, body);
     }
 
     function checkbox(value, label, checked, onchange) {
