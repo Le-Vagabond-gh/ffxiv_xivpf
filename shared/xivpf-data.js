@@ -1,4 +1,6 @@
-{
+// static game data shared by the page (userscript and android) and the kotlin poller,
+// which reads the json object between the first { and the last } of this file
+window.XIVPF_DATA = {
   "regions": {
     "North America": ["Aether", "Crystal", "Dynamis", "Primal"],
     "Europe": ["Chaos", "Light"],
@@ -48,3 +50,4 @@
     "vault": "The Final Verse"
   }
 }
+;

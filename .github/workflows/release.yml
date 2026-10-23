@@ -1,0 +1,31 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: 1.1.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      # same key as local builds, so CI and local APKs update each other
+      - run: mkdir -p ~/.android && echo "$DEBUG_KEYSTORE" | base64 -d > ~/.android/debug.keystore
+        env:
+          DEBUG_KEYSTORE: ${{ secrets.DEBUG_KEYSTORE }}
+      - run: ./gradlew assembleRelease -PversionCode=${{ github.run_number }} -PversionName=$VERSION
+      - run: |
+          # build.gradle.kts sends outputs to ~/.cache, see there
+          cp ~/.cache/xivpf-android/build/app/outputs/apk/release/app-release.apk "xivpf-$VERSION.apk"
+          gh release create "v$VERSION" *.apk --target "$GITHUB_SHA" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

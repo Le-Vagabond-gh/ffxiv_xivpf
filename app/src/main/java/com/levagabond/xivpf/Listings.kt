@@ -6,9 +6,10 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-// Kotlin half of the listing logic. The static game data lives in assets/data.json
-// (shared with assets/pf.js) and the filter below must stay in step with matches()
-// in pf.js, so the background poller alerts on exactly what the page shows.
+// Kotlin half of the listing logic. The static game data lives in shared/xivpf-data.js
+// (shared with the page and the userscript) and the filter below must stay in step
+// with matches() in shared/xivpf-core.js, so the background poller alerts on exactly
+// what the page shows.
 object Listings {
     const val API = "https://xivpf.com/api/listings"
     private const val KEY_STATE = "state"
@@ -17,7 +18,12 @@ object Listings {
     fun stateText(ctx: Context): String = prefs(ctx).getString(KEY_STATE, null) ?: "{}"
     fun saveState(ctx: Context, json: String) = prefs(ctx).edit().putString(KEY_STATE, json).apply()
 
-    fun data(ctx: Context): JSONObject = JSONObject(ctx.assets.open("data.json").bufferedReader().readText())
+    // xivpf-data.js is `window.XIVPF_DATA = {json};` so the page can load it as a plain
+    // script; the object between the first { and the last } is the json
+    fun data(ctx: Context): JSONObject {
+        val js = ctx.assets.open("xivpf-data.js").bufferedReader().readText()
+        return JSONObject(js.substring(js.indexOf('{'), js.lastIndexOf('}') + 1))
+    }
 
     fun get(url: String): String {
         val c = URL(url).openConnection() as HttpURLConnection

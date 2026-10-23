@@ -15,9 +15,10 @@ import android.webkit.WebViewClient
 import org.json.JSONObject
 import java.io.File
 
-// The whole UI is assets/pf.html + pf.js (a port of the xivpf userscript) in a WebView.
-// Kotlin only does what the page cannot: HTTP without CORS, persistent state the poller
-// can read, and starting/stopping the poller service.
+// The whole UI is shared/xivpf-core.js (same page as the userscript) wired to this
+// bridge by assets/pf.js, in a WebView. Kotlin only does what the page cannot: HTTP
+// without CORS, persistent state the poller can read, and starting/stopping the
+// poller service.
 class MainActivity : Activity() {
     private lateinit var web: WebView
 
@@ -39,15 +40,20 @@ class MainActivity : Activity() {
             }
         }
         web.addJavascriptInterface(Bridge(), "Android")
+        // edge-to-edge is forced since android 15, so the page would start under the
+        // status bar; the padding strip takes pico's dark background
+        web.setBackgroundColor(0xFF11191F.toInt())
+        web.setOnApplyWindowInsetsListener { v, insets ->
+            @Suppress("DEPRECATION")
+            v.setPadding(0, insets.systemWindowInsetTop, 0, insets.systemWindowInsetBottom)
+            insets
+        }
         web.loadUrl("file:///android_asset/pf.html")
         setContentView(web)
     }
 
     // All methods run on the WebView's bridge thread, not the UI thread.
     inner class Bridge {
-        @JavascriptInterface
-        fun data(): String = assets.open("data.json").bufferedReader().readText()
-
         // The icon sprite is cached once; <use href> cannot reference a cross-origin file.
         @JavascriptInterface
         fun icons(): String {
