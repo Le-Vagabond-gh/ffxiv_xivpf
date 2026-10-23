@@ -26,7 +26,7 @@
         }),
         stateDefaults: { interval: 60 }, // seconds, page refresh and poller alike
         refreshMs: ({ state }) => state.interval * 1000,
-        controls: ({ el, state, saveState, scheduleRefresh }) => {
+        autoControls: ({ el, state, saveState, scheduleRefresh }) => {
             const interval = el('select', { onchange: () => { state.interval = parseInt(interval.value, 10); saveState(); scheduleRefresh(); } });
             for (const m of INTERVALS) interval.append(el('option', { value: String(m * 60), text: `${m} min` }));
             if (!INTERVALS.includes(state.interval / 60)) state.interval = 60;

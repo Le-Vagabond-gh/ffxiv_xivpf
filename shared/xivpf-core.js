@@ -8,7 +8,8 @@
 //                        cannot reach the site's file (android)
 //   homeHref          -> optional: makes the "xivpf" brand a link
 //   navItems(ctx)     -> optional: extra <li> for the nav bar, before the common ones
-//   controls(ctx)     -> optional: extra elements for the controls row
+//   autoControls(ctx) -> optional: extra elements for a row under the nav bar that
+//                        is only shown while auto-refresh is on
 //   refreshMs(ctx)    -> optional: auto-refresh interval, default 60s
 //   stateDefaults     -> optional: extra persisted state fields with their defaults
 //   onRender(ctx)     -> optional: called after every render
@@ -201,10 +202,14 @@ window.xivpfInit = function (platform) {
                 .pf-checks { display: flex; flex-flow: row wrap; gap: .25em 1em; }
                 .pf-checks label { display: inline-flex; align-items: center; gap: .4em; margin: 0; white-space: nowrap; }
                 .pf-checks input { margin: 0; }
-                #pf-duties > div + div { margin-top: .5em; }
+                /* the site makes .control a max-content flex row for its one-line category list; ours wrap, and the duty groups stack on a phone */
+                .filter-controls .control { width: auto; flex-wrap: wrap; gap: .5em 2em; }
+                @media (max-width: 50em) { .filter-controls .control { flex-direction: column; } }
                 .pf-cat-buttons { margin: .5em 0 0 1em; display: flex; gap: .5em; }
                 .pf-cat-buttons a { cursor: pointer; }
                 #container > .settings > .controls { flex-wrap: wrap; row-gap: .5em; }
+                #pf-auto { justify-content: flex-start; gap: 1em; margin-bottom: .5em; }
+                #pf-auto > label { margin: 0; }
                 #container > .settings > .controls > select { flex: 0 1 14em; }
                 #container > .settings > .controls > label { display: inline-flex; align-items: center; gap: .4em; margin: 0 0 0 1em; white-space: nowrap; }
                 #container > .settings > .controls > label > input { margin: 0; }
@@ -228,10 +233,17 @@ window.xivpfInit = function (platform) {
             oninput: () => { state.search = search.value; saveState(); render(); },
         });
 
+        const autoControls = platform.autoControls ? platform.autoControls(ctx) : [];
+        const autoRow = autoControls.length ? el('div', { id: 'pf-auto', class: 'controls' }, ...autoControls) : null;
         const autoRefresh = el('input', {
-            type: 'checkbox', onchange: () => { state.autoRefresh = autoRefresh.checked; saveState(); scheduleRefresh(); },
+            type: 'checkbox', onchange: () => {
+                state.autoRefresh = autoRefresh.checked;
+                if (autoRow) autoRow.hidden = !state.autoRefresh;
+                saveState(); scheduleRefresh();
+            },
         });
         autoRefresh.checked = state.autoRefresh;
+        if (autoRow) autoRow.hidden = !state.autoRefresh;
 
         const categories = el('div', { id: 'pf-categories', class: 'pf-checks' });
         for (const [key, label] of CATEGORIES) {
@@ -267,10 +279,10 @@ window.xivpfInit = function (platform) {
             el('div', { class: 'container' },
                 el('div', { id: 'container' },
                     el('div', { class: 'requires-js settings' },
+                        autoRow,
                         el('div', { class: 'controls' },
                             search,
                             areaSelect,
-                            ...(platform.controls ? platform.controls(ctx) : []),
                             el('span', { id: 'pf-status', text: 'loading...' }),
                         ),
                         el('div', {},
