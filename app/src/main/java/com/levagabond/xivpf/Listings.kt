@@ -45,7 +45,7 @@ object Listings {
         private val categories: Set<String>
         private val duties: Set<String> = state.optJSONArray("duties")?.let { a -> (0 until a.length()).map { a.getString(it) }.toSet() } ?: emptySet()
         private val search: String = state.optString("search", "").lowercase()
-        val interval: Long = state.optInt("interval", 60).coerceAtLeast(60).toLong()
+        val interval: Long = state.optInt("interval", 300).coerceAtLeast(60).toLong()
 
         init {
             val dcWorlds = data.getJSONObject("dcWorlds")

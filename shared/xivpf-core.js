@@ -8,10 +8,8 @@
 //                        cannot reach the site's file (android)
 //   homeHref          -> optional: makes the "xivpf" brand a link
 //   navItems(ctx)     -> optional: extra <li> for the nav bar, before the common ones
-//   autoControls(ctx) -> optional: extra elements for a row under the nav bar that
-//                        is only shown while auto-refresh is on
-//   refreshMs(ctx)    -> optional: auto-refresh interval, default 60s
-//   stateDefaults     -> optional: extra persisted state fields with their defaults
+//   autoControls(ctx) -> optional: extra elements for the "every N min" row under the
+//                        nav bar, which is only shown while auto-refresh is on
 //   onRender(ctx)     -> optional: called after every render
 // Needs window.XIVPF_DATA (xivpf-data.js) loaded first. Returns ctx:
 //   { el, state, saveState, render, refresh, scheduleRefresh }
@@ -127,13 +125,18 @@ window.xivpfInit = function (platform) {
     // State
     // ---------------------------------------------------------------
 
-    const state = Object.assign({
+    // /api/listings is the whole board, ~1.5 MB uncompressed with no server-side
+    // filter, so the refresh interval is the only thing that keeps traffic down
+    const INTERVALS = [1, 2, 3, 5, 10, 15, 30]; // minutes
+
+    const state = {
         area: 'Europe',                                   // 'All' | region name | DC name
         categories: CATEGORIES.map(([key]) => key),      // allowed category keys
         duties: [],                                       // dutyName()s to show, empty = all
         search: '',
         autoRefresh: true,
-    }, platform.stateDefaults);
+        interval: 300,                                    // seconds between refreshes
+    };
 
     function loadState() {
         try {
@@ -210,6 +213,7 @@ window.xivpfInit = function (platform) {
                 #container > .settings > .controls { flex-wrap: wrap; row-gap: .5em; }
                 #pf-auto { justify-content: flex-start; gap: 1em; margin-bottom: .5em; }
                 #pf-auto > label { margin: 0; }
+                footer { color: var(--meta-text); text-align: center; padding: 1em 0 2em; }
                 #container > .settings > .controls > select { flex: 0 1 14em; }
                 #container > .settings > .controls > label { display: inline-flex; align-items: center; gap: .4em; margin: 0 0 0 1em; white-space: nowrap; }
                 #container > .settings > .controls > label > input { margin: 0; }
@@ -233,17 +237,24 @@ window.xivpfInit = function (platform) {
             oninput: () => { state.search = search.value; saveState(); render(); },
         });
 
-        const autoControls = platform.autoControls ? platform.autoControls(ctx) : [];
-        const autoRow = autoControls.length ? el('div', { id: 'pf-auto', class: 'controls' }, ...autoControls) : null;
+        const interval = el('select', { onchange: () => { state.interval = parseInt(interval.value, 10); saveState(); scheduleRefresh(); } });
+        for (const m of INTERVALS) interval.append(el('option', { value: String(m * 60), text: `${m} min` }));
+        if (!INTERVALS.includes(state.interval / 60)) state.interval = 300;
+        interval.value = String(state.interval);
+
+        const autoRow = el('div', { id: 'pf-auto', class: 'controls' },
+            el('label', {}, document.createTextNode('every'), interval),
+            ...(platform.autoControls ? platform.autoControls(ctx) : []),
+        );
         const autoRefresh = el('input', {
             type: 'checkbox', onchange: () => {
                 state.autoRefresh = autoRefresh.checked;
-                if (autoRow) autoRow.hidden = !state.autoRefresh;
+                autoRow.hidden = !state.autoRefresh;
                 saveState(); scheduleRefresh();
             },
         });
         autoRefresh.checked = state.autoRefresh;
-        if (autoRow) autoRow.hidden = !state.autoRefresh;
+        autoRow.hidden = !state.autoRefresh;
 
         const categories = el('div', { id: 'pf-categories', class: 'pf-checks' });
         for (const [key, label] of CATEGORIES) {
@@ -309,6 +320,15 @@ window.xivpfInit = function (platform) {
                         ),
                     ),
                     el('div', { id: 'listings', class: 'list' }),
+                ),
+            ),
+            // same links as the site's "support" menu: this page only exists thanks to their api
+            el('footer', { class: 'container' },
+                el('small', {},
+                    document.createTextNode('data from xivpf.com, support its '),
+                    el('a', { href: 'https://ko-fi.com/zeroeightsix', target: '_blank', rel: 'noopener', text: 'current maintainer' }),
+                    document.createTextNode(' or '),
+                    el('a', { href: 'https://www.patreon.com/join/lojewalo', target: '_blank', rel: 'noopener', text: 'original creator' }),
                 ),
             ),
         );
@@ -500,7 +520,7 @@ window.xivpfInit = function (platform) {
     function scheduleRefresh() {
         clearTimeout(refreshTimer);
         if (state.autoRefresh) {
-            refreshTimer = setTimeout(refresh, platform.refreshMs ? platform.refreshMs(ctx) : 60000);
+            refreshTimer = setTimeout(refresh, state.interval * 1000);
         }
     }
 

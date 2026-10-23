@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         xivpf - lightweight party finder page
 // @namespace    com.levagabond.xivpf
-// @version      1.8.1
+// @version      1.9.0
 // @description  Replaces https://xivpf.com/pf with a page built from /api/listings: region/DC, category and duty filters, text search, auto-refresh, real deep dungeon names.
 // @updateURL    https://raw.githubusercontent.com/Le-Vagabond-gh/ffxiv_xivpf/main/userscript/xivpf-pf.user.js
 // @downloadURL  https://raw.githubusercontent.com/Le-Vagabond-gh/ffxiv_xivpf/main/userscript/xivpf-pf.user.js

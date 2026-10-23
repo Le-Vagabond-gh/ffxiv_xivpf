@@ -7,7 +7,6 @@
 (function () {
     'use strict';
 
-    const INTERVALS = [1, 2, 3, 5, 10, 15, 30]; // minutes
     let alertsBox = null;
     let pending = null; // the fetch in flight, settled by pfListings/pfError from kotlin
 
@@ -24,21 +23,11 @@
             pending = { resolve, reject };
             Android.refresh();
         }),
-        stateDefaults: { interval: 60 }, // seconds, page refresh and poller alike
-        refreshMs: ({ state }) => state.interval * 1000,
-        autoControls: ({ el, state, saveState, scheduleRefresh }) => {
-            const interval = el('select', { onchange: () => { state.interval = parseInt(interval.value, 10); saveState(); scheduleRefresh(); } });
-            for (const m of INTERVALS) interval.append(el('option', { value: String(m * 60), text: `${m} min` }));
-            if (!INTERVALS.includes(state.interval / 60)) state.interval = 60;
-            interval.value = String(state.interval);
-
+        // the poller checks on the same interval as the page
+        autoControls: ({ el }) => {
             alertsBox = el('input', { type: 'checkbox', onchange: () => Android.setPolling(alertsBox.checked) });
             alertsBox.checked = Android.polling();
-
-            return [
-                el('label', {}, document.createTextNode('every'), interval),
-                el('label', {}, alertsBox, document.createTextNode('alerts')),
-            ];
+            return [el('label', {}, alertsBox, document.createTextNode('alerts'))];
         },
         // pick up a poller stopped from its notification
         onRender: () => { if (alertsBox) alertsBox.checked = Android.polling(); },
