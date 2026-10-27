@@ -19,10 +19,11 @@ object Listings {
     fun saveState(ctx: Context, json: String) = prefs(ctx).edit().putString(KEY_STATE, json).apply()
 
     // xivpf-data.js is `window.XIVPF_DATA = {json};` so the page can load it as a plain
-    // script; the object between the first { and the last } is the json
+    // script; the json is the object from the assignment to the last } (the header
+    // comment has braces of its own, so indexOf('{') is a trap)
     fun data(ctx: Context): JSONObject {
         val js = ctx.assets.open("xivpf-data.js").bufferedReader().readText()
-        return JSONObject(js.substring(js.indexOf('{'), js.lastIndexOf('}') + 1))
+        return JSONObject(js.substring(js.indexOf('{', js.indexOf("XIVPF_DATA")), js.lastIndexOf('}') + 1))
     }
 
     fun get(url: String): String {
